@@ -26,27 +26,28 @@ def sec_to_hms(sec):
 
 def write_output(fname,wav_data):
 
-  if len(wav_data)%2 == 1:
-    wav_data = wav_data[:-1]
+    if len(wav_data)%2 == 1:
+        wav_data = wav_data[:-1]
 
-  wavef = wave.open('temp.wav','w')
-  wavef.setnchannels(2) # mono
-  wavef.setsampwidth(2) 
-  wavef.setframerate(44100)
+    wavef = wave.open('temp.wav','w')
+    wavef.setnchannels(2) # mono
+    wavef.setsampwidth(2) 
+    wavef.setframerate(44100)
 
-  for i in range(0,len(wav_data),2):
-    l = wav_data[i]
-    r = wav_data[i+1]
-    wavef.writeframesraw( struct.pack('<hh', l, r ) )
+    for i in range(0,len(wav_data),2):
+        l = int(wav_data[i])
+        r = int(wav_data[i+1])
+        wavef.writeframesraw( struct.pack('<hh', l, r ) )
 
-  wavef.writeframes('')
-  wavef.close()
+    wavef.writeframes(b'')
+    wavef.close()
 
-  ffmpegCmd = 'ffmpeg -loglevel quiet -y -i temp.wav -ar 44100 -ac 2 -b:a 192k -f mp3 \'' + fname + '\''
-  p = subprocess.Popen(ffmpegCmd,shell=True,stdout=subprocess.PIPE)
-  term_out = p.communicate()[0]
+    ffmpeg_cmd = ['ffmpeg', '-loglevel', 'quiet', '-y', '-i', 'temp.wav', '-ar',\
+        '44100', '-ac', '2', '-b:a', '192k', '-f', 'mp3', fname]
+    p = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE)
+    term_out = p.communicate()[0]
 
-  return True
+    return True
 
 #---------------------------------------------------------
 
@@ -54,9 +55,9 @@ def mix(v1, v2):
     
     N = min(len(v1),len(v2))
     v = []
-    for i in xrange(0,N):
+    for i in range(0,N):
         a = float(i)/N
-        v.append((1.0-a)*v1[i] + a*v2[i])
+        v.append(int((1.0-a)*v1[i] + a*v2[i]))
     
     return v
     
@@ -64,38 +65,42 @@ def mix(v1, v2):
 
 def get_section(filename,start,stop,speed):
 
-  result = {'success':False, 'data':[]}
+    result = {'success':False, 'data':[]}
 
-  atempo = str(speed)
+    atempo = str(speed)
 
-  #-----------------------------------------------------------
-  # Construct the ffmpeg command
+    #-----------------------------------------------------------
+    # Construct the ffmpeg command
 
-  if stop == None:
-    ffmpegCmd = 'ffmpeg -loglevel quiet -i \''+filename+'\' -ac 2 -ab 16000 -ar 44100 -ss '+start+' -f wav pipe:1 | \
-               ffmpeg -loglevel quiet -i pipe:0 -af atempo='+atempo+' -f wav pipe:1'
-  else:
-    ffmpegCmd = 'ffmpeg -loglevel quiet -i \''+filename+'\' -ac 2 -ab 16000 -ar 44100 -ss '+start+' -to '+stop+' -f wav pipe:1 | \
-               ffmpeg -loglevel quiet -i pipe:0 -af atempo='+atempo+' -f wav pipe:1'
+    if stop == None:
+        ffmpeg_cmd_1 = ['ffmpeg', '-loglevel', 'quiet', '-i', filename, '-ac', '2', '-ab',\
+            '16000', '-ar', '44100', '-ss', start, '-f', 'wav', 'pipe:1']
+    else:
+        ffmpeg_cmd_1 = ['ffmpeg', '-loglevel', 'quiet', '-i', filename, '-ac', '2', '-ab',\
+            '16000', '-ar', '44100', '-ss', start, '-to', stop, '-f', 'wav', 'pipe:1']
+    ffmpeg_cmd_2 = ['ffmpeg', '-loglevel', 'quiet', '-i', 'pipe:0', '-af',\
+        'atempo='+atempo, '-f', 'wav', 'pipe:1']
 
-  #-----------------------------------------------------------
-  # Run ffmpeg and get a list representation of the audio chunk
+    #-----------------------------------------------------------
+    # Run ffmpeg and get a list representation of the audio chunk
 
-  p = subprocess.Popen(ffmpegCmd,shell=True,stdout=subprocess.PIPE)
-  wavdata = p.communicate()[0]
-  snd_data = list(struct.unpack( 'h'*(len(wavdata)/2), wavdata ))
+    p1 = subprocess.Popen(ffmpeg_cmd_1, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(ffmpeg_cmd_2, stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    wavdata = p2.communicate()[0]
+    snd_data = list(struct.unpack( 'h'*int(len(wavdata)/2), wavdata ))
 
-  # try to prevent an audible click at the transition
-  for i in range(0,500):
-    snd_data[i] = (float(i)/500)*snd_data[i]
-    snd_data[-1-i] = (float(i)/500)*snd_data[-1-i]
+    # try to prevent an audible click at the transition
+    for i in range(0,500):
+        snd_data[i] = (float(i)/500)*snd_data[i]
+        snd_data[-1-i] = (float(i)/500)*snd_data[-1-i]
 
-  #---
+    #---
 
-  result['success'] = True
-  result['data'] = snd_data
+    result['success'] = True
+    result['data'] = snd_data
 
-  return result
+    return result
 
 #---------------------------------------------------------
         
