@@ -11,7 +11,7 @@ import wave
 
 def generate_mix(in_filename):
 
-    return out_filename
+    return in_filename
 
 #---------------------------------------------------------
 
