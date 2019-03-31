@@ -17,8 +17,8 @@ def process_s3_file(response):
         receipt_handle = response['Messages'][0]['ReceiptHandle']
         s3 = boto3.client('s3',conf['region']) 
         bucket_name = conf['bucket_name'] 
-        in_filename = key
-        s3.download_file(bucket_name, key, in_filename)
+        in_filename = s3_key
+        s3.download_file(bucket_name, s3_key, in_filename)
         out_filename = mix_worker.generate_mix(in_filename)
         s3.upload_file(out_filename, bucket_name, out_filename)
         return True
@@ -44,7 +44,7 @@ if __name__ == '__main__':
             #---
 
         else:
-            print 'Shutting down...'
+            print('Shutting down...')
             response = requests.get('http://169.254.169.254/latest/meta-data/instance-id')
             instance_id = response.text
             #--
