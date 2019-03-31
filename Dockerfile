@@ -17,6 +17,8 @@ RUN apt-get install -y ffmpeg
 
 RUN pip3 install --upgrade pip
 RUN pip3 install pyyaml
+RUN pip3 install boto3
+RUN pip3 install requests
 
 RUN mkdir /var/mix/
 

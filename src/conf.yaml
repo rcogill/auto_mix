@@ -1,0 +1,3 @@
+region : 'REGION GOES HERE'
+queue_url : 'QUEUE URL GOES HERE'
+bucket_name : 'S3 BUCKET NAME GOES HERE'

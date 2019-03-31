@@ -7,6 +7,14 @@ import wave
 
 #---------------------------------------------------------
 
+# DUMMY
+
+def generate_mix(in_filename):
+
+    return out_filename
+
+#---------------------------------------------------------
+
 def hms_to_sec(hms):
 
     if '.' not in hms:
