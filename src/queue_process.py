@@ -20,7 +20,7 @@ def process_s3_file(response):
         in_filename = s3_key
         s3.download_file(bucket_name, s3_key, in_filename)
         out_filename = mix_worker.generate_mix(in_filename)
-        s3.upload_file(out_filename, bucket_name, out_filename)
+        s3.upload_file(in_filename, bucket_name, out_filename)
         return receipt_handle
     #except:
     #    return None
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     while 1:
         response = sqs.receive_message(QueueUrl=queue_url)
         if 'Messages' in response:
-            result = process_s3_file(response)
+            receipt_handle = process_s3_file(response)
             if receipt_handle != None:
                 print(receipt_handle)
                 sqs.delete_message(QueueUrl=queue_url,ReceiptHandle=receipt_handle)
