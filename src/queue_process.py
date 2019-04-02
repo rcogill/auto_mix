@@ -40,7 +40,6 @@ if __name__ == '__main__':
         if 'Messages' in response:
             receipt_handle = process_s3_file(response)
             if receipt_handle != None:
-                print(receipt_handle)
                 sqs.delete_message(QueueUrl=queue_url,ReceiptHandle=receipt_handle)
             #---
 

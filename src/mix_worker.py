@@ -4,6 +4,9 @@ import datetime
 import subprocess
 import struct
 import wave
+import zipfile
+from tempfile import TemporaryDirectory
+import os
 
 #---------------------------------------------------------
 
@@ -11,7 +14,18 @@ import wave
 
 def generate_mix(in_filename):
 
-    return 'output_'+in_filename
+    with TemporaryDirectory() as tmp_dir:
+        zip = zipfile.ZipFile(in_filename, 'r')
+        zip.extractall(tmp_dir)
+        zip.close()
+
+        out_filename = 'output_'+in_filename
+        zip = zipfile.ZipFile(out_filename, 'w', zipfile.ZIP_DEFLATED)
+        for filename in os.listdir(tmp_dir):
+            zip.write(os.path.join(tmp_dir,filename), arcname=filename)
+        zip.close()
+
+    return out_filename
 
 #---------------------------------------------------------
 
