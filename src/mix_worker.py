@@ -10,8 +10,6 @@ import os
 
 #---------------------------------------------------------
 
-# DUMMY
-
 def generate_mix(in_filename):
 
     with TemporaryDirectory() as tmp_dir:
@@ -19,10 +17,13 @@ def generate_mix(in_filename):
         zip.extractall(tmp_dir)
         zip.close()
 
+        create_mix_files('playlist.yaml', tmp_dir)
+
         out_filename = 'output_'+in_filename
         zip = zipfile.ZipFile(out_filename, 'w', zipfile.ZIP_DEFLATED)
         for filename in os.listdir(tmp_dir):
-            zip.write(os.path.join(tmp_dir,filename), arcname=filename)
+            if 'M_' in filename:
+                zip.write(os.path.join(tmp_dir,filename), arcname=filename)
         zip.close()
 
     return out_filename
@@ -126,7 +127,7 @@ def get_section(filename,start,stop,speed):
 
 #---------------------------------------------------------
         
-def get_mix_section(c1,c2,r):
+def get_mix_section(c1,c2,r,directory):
 
     result = {'success':False, 's1':None, 'e1':None,\
               's2':None, 'e2':None, 'r':r, 'data':[]}
@@ -169,7 +170,7 @@ def get_mix_section(c1,c2,r):
         result['s2'] = s2
 
     try:
-        result_1 = get_section(c1['t'],s1,e1,r)
+        result_1 = get_section(os.path.join(directory, c1['t']),s1,e1,r)
     except:
         msg = 'Error processing section 1'
         logging.info(msg)
@@ -178,7 +179,7 @@ def get_mix_section(c1,c2,r):
     try:
         r = r*(e2_sec-s2_sec)/(e1_sec-s1_sec)
         result['r'] = r
-        result_2 = get_section(c2['t'],s2,e2,r)
+        result_2 = get_section(os.path.join(directory, c2['t']),s2,e2,r)
     except:
         msg = 'Error processing section 2'
         logging.info(msg)
@@ -200,11 +201,11 @@ def get_mix_section(c1,c2,r):
         
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-if __name__ == '__main__':
- 
+def create_mix_files(playlist_file, directory):
+
     logging.basicConfig(filename='run.log',level=logging.INFO)
 
-    f = open('conf.yaml','r')
+    f = open(os.path.join(directory, playlist_file), 'r')
     conf = yaml.load(f.read())
     f.close()
 
@@ -230,11 +231,11 @@ if __name__ == '__main__':
                 logging.info(msg)
                 s = '00:00:00.0'
 
-        mix_res = get_mix_section(conf[i],conf[i+1],r)
+        mix_res = get_mix_section(conf[i],conf[i+1],r,directory)
         
         if mix_res['success'] == True:
             e = mix_res['s1']
-            main_res = get_section(conf[i]['t'],s,e,r)
+            main_res = get_section(os.path.join(directory, conf[i]['t']),s,e,r)
             if main_res['success'] == True:
                 v = main_res['data'] + mix_res['data']
                 from_start = False
@@ -243,7 +244,7 @@ if __name__ == '__main__':
                 continue
         else:
             e = None
-            main_res = get_section(conf[i]['t'],s,e,r)
+            main_res = get_section(os.path.join(directory, conf[i]['t']),s,e,r)
             if main_res['success'] == True:
                 v = main_res['data']
                 from_start = True
@@ -253,7 +254,7 @@ if __name__ == '__main__':
             
         r = mix_res['r']
 
-        write_output('M_'+conf[i]['t'],v)
+        write_output(os.path.join(directory, 'M_'+conf[i]['t']),v)
 
     #--------
     # Do the last part
@@ -268,8 +269,8 @@ if __name__ == '__main__':
             s = '00:00:00.0'
             
     e = None
-    main_res = get_section(conf[-1]['t'],s,e,r)
+    main_res = get_section(os.path.join(directory, conf[-1]['t']),s,e,r)
     if main_res['success'] == True:
         v = main_res['data']
         from_start = True
-        write_output('M_'+conf[-1]['t'],v)
+        write_output(os.path.join(directory, 'M_'+conf[-1]['t']),v)
