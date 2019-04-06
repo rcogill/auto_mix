@@ -10,21 +10,22 @@ import os
 
 #---------------------------------------------------------
 
-def generate_mix(in_filename):
+def generate_mix(in_filename, tmp_dir):
 
-    with TemporaryDirectory() as tmp_dir:
-        zip = zipfile.ZipFile(in_filename, 'r')
-        zip.extractall(tmp_dir)
-        zip.close()
+    full_in_fname = os.path.join(tmp_dir,in_filename)
+    zip = zipfile.ZipFile(full_in_fname, 'r')
+    zip.extractall(tmp_dir)
+    zip.close()
 
-        create_mix_files('playlist.yaml', tmp_dir)
+    create_mix_files('playlist.yaml', tmp_dir)
 
-        out_filename = 'output_'+in_filename
-        zip = zipfile.ZipFile(out_filename, 'w', zipfile.ZIP_DEFLATED)
-        for filename in os.listdir(tmp_dir):
-            if 'M_' in filename:
-                zip.write(os.path.join(tmp_dir,filename), arcname=filename)
-        zip.close()
+    out_filename = 'output_'+in_filename
+    full_out_fname = os.path.join(tmp_dir, out_filename)
+    zip = zipfile.ZipFile(full_out_fname, 'w', zipfile.ZIP_DEFLATED)
+    for filename in os.listdir(tmp_dir):
+        if 'M_' in filename:
+            zip.write(os.path.join(tmp_dir,filename), arcname=filename)
+    zip.close()
 
     return out_filename
 

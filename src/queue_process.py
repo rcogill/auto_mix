@@ -3,6 +3,8 @@ import boto3
 import json
 import requests
 import logging
+from tempfile import TemporaryDirectory
+import os
 
 import config
 import mix_worker
@@ -17,10 +19,14 @@ def process_s3_file(response):
         receipt_handle = response['Messages'][0]['ReceiptHandle']
         s3 = boto3.client('s3',conf['region']) 
         bucket_name = conf['bucket_name'] 
-        in_filename = s3_key
-        s3.download_file(bucket_name, s3_key, in_filename)
-        out_filename = mix_worker.generate_mix(in_filename)
-        s3.upload_file(out_filename, bucket_name, out_filename)
+        #---
+        with TemporaryDirectory() as tmp_dir:
+            in_filename = s3_key
+            full_in_fname = os.path.join(tmp_dir,in_filename)
+            s3.download_file(bucket_name, s3_key, full_in_fname)
+            out_filename = mix_worker.generate_mix(in_filename, tmp_dir)
+            full_out_fname = os.path.join(tmp_dir,out_filename)
+            s3.upload_file(full_out_fname, bucket_name, out_filename)
         return receipt_handle
     #except:
     #    return None
