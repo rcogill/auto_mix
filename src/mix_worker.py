@@ -11,14 +11,27 @@ import os
 #---------------------------------------------------------
 
 def generate_mix(in_filename, tmp_dir):
+    '''Generate the mix from an input archive
 
+    Inputs:
+    - in_filename : The name of the zip archive that contains
+        the playlist data and audio files
+    - tmp_dir : Temporary directory where the archive is placed
+        and the ouput archive will be written
+    Returns: The name of the zip archive that contains the mixed 
+        output audio files
+    '''
+
+    # Unzip the input archive to the temp directory
     full_in_fname = os.path.join(tmp_dir,in_filename)
     zip = zipfile.ZipFile(full_in_fname, 'r')
     zip.extractall(tmp_dir)
     zip.close()
 
+    # Generate the mix files according to the provided playlist
     create_mix_files('playlist.yaml', tmp_dir)
 
+    # Place output files in the output archive, zip, and return
     out_filename = 'output_'+in_filename
     full_out_fname = os.path.join(tmp_dir, out_filename)
     zip = zipfile.ZipFile(full_out_fname, 'w', zipfile.ZIP_DEFLATED)
@@ -32,6 +45,12 @@ def generate_mix(in_filename, tmp_dir):
 #---------------------------------------------------------
 
 def hms_to_sec(hms):
+    '''Convert H:M:S format to total seconds
+
+    Inputs:
+    - hms: String formatted as H:M:S with decimal seconds
+    Returns: Time in seconds corresponding to the input
+    '''
 
     if '.' not in hms:
         hms = hms + '.0'
@@ -43,29 +62,47 @@ def hms_to_sec(hms):
 #---------------------------------------------------------
 
 def sec_to_hms(sec):
+    '''Convert total seconds to H:M:S format
+
+    Inputs:
+    - sec : Total seconds
+    Returns: Total seconds from input formatted as H:M:S
+    '''
 
     return str(datetime.timedelta(seconds=sec))
 
 #---------------------------------------------------------
 
 def write_output(fname,wav_data):
+    '''Write raw wav data to an mp3 file. Assumes 16-bit stereo data 
+       sampled at 44.1kHz
 
+    Inputs:
+    - fname : The name of the output file to write
+    - wav_data : Raw wav data to transcode in an mp3 file
+    Returns: True if successful
+    '''
+
+    # Stereo wav data should be an even number of bytes
+    # Chop one off if not
     if len(wav_data)%2 == 1:
         wav_data = wav_data[:-1]
 
+    # Create a temporary wav file before transcoding
     wavef = wave.open('temp.wav','w')
-    wavef.setnchannels(2) # mono
+    wavef.setnchannels(2) 
     wavef.setsampwidth(2) 
     wavef.setframerate(44100)
 
+    # Write wav data to the file
     for i in range(0,len(wav_data),2):
         l = int(wav_data[i])
         r = int(wav_data[i+1])
         wavef.writeframesraw( struct.pack('<hh', l, r ) )
-
     wavef.writeframes(b'')
     wavef.close()
 
+    # Use ffmpeg to transcode the wav data
     ffmpeg_cmd = ['ffmpeg', '-loglevel', 'quiet', '-y', '-i', 'temp.wav', '-ar',\
         '44100', '-ac', '2', '-b:a', '192k', '-f', 'mp3', fname]
     p = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE)
@@ -76,7 +113,17 @@ def write_output(fname,wav_data):
 #---------------------------------------------------------
 
 def mix(v1, v2):
+    '''Crossfade to segments of audio. Just uses a simple linear crossfade
+
+    Inputs:
+    - v1 : First array containing raw audio data
+    - v2 : Second array containing raw audio data
+    Returns: Array containing blended audio data
+    '''
     
+    # Loop over the arrays and fade
+    # Truncate to the minimum length of the two
+    # TODO: BETTER CROSSFADING, DON'T LOOP, USE ARRAYS
     N = min(len(v1),len(v2))
     v = []
     for i in range(0,N):
@@ -88,13 +135,24 @@ def mix(v1, v2):
 #---------------------------------------------------------
 
 def get_section(filename,start,stop,speed):
+    '''Extract a segment of wav data from an mp3 file
 
+    Inputs:
+    - filename : Name of the input mp3 file
+    - start : Starting time of the segment to extract
+    - stop : Ending time of the segment to extract
+    - speed : Speed adjustment to apply to the extracted segment
+    Returns: A dictionary containing the result status, together with
+        the extracted audio data
+    '''
+
+    # Set a default response of no success, no data extracted
     result = {'success':False, 'data':[]}
-
-    atempo = str(speed)
 
     #-----------------------------------------------------------
     # Construct the ffmpeg command
+
+    atempo = str(speed)
 
     if stop == None:
         ffmpeg_cmd_1 = ['ffmpeg', '-loglevel', 'quiet', '-i', filename, '-ac', '2', '-ab',\
@@ -107,6 +165,8 @@ def get_section(filename,start,stop,speed):
 
     #-----------------------------------------------------------
     # Run ffmpeg and get a list representation of the audio chunk
+    # This pipes two connands together: One to extract the segment and
+    # one to adjust the speed
 
     p1 = subprocess.Popen(ffmpeg_cmd_1, stdout=subprocess.PIPE)
     p2 = subprocess.Popen(ffmpeg_cmd_2, stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -121,6 +181,7 @@ def get_section(filename,start,stop,speed):
 
     #---
 
+    # If successful, return a True success and the extracted audio data
     result['success'] = True
     result['data'] = snd_data
 
