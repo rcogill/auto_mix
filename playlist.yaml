@@ -1,10 +1,19 @@
-- t: 'EDO G. - Saying  Something (prod dj premier).mp3'
-  mo: 
-    s: '0:01:56.149'
-    e: '0:02:06.372'
-    b: 16
-- t: 'J-Live - The Best Part [Prod. By DJ Premier].mp3'
-  mi:
-    s: '0:00:00.202'
-    e: '0:00:10.350'
-    b: 16
+- track: 'EDO G. - Saying  Something (prod dj premier).mp3'
+  mix_out: 
+    start: '0:01:56.149'
+    end: '0:02:06.372'
+    beats: 16
+- track: 'J-Live - The Best Part [Prod. By DJ Premier].mp3'
+  mix_in:
+    start: '0:00:00.202'
+    end: '0:00:10.350'
+    beats: 16
+  mix_out: 
+    start: '0:02:11.852'
+    end: '0:02:21.985'
+    beats: 16
+- track: 'Pharoahe Monch YAYO.mp3'
+  mix_in:
+    start: '0:00:53.071'
+    end: '0:01:02.715'
+    beats: 16

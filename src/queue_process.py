@@ -1,15 +1,20 @@
+'''
+This script runs continually and polls a queue of mix jobs to process.
+Any new jobs are processed by the mix_worker module and removed from the queue
+upon successful completion.
+'''
+
 import time
-import boto3
-import json
-import requests
-import logging
-from tempfile import TemporaryDirectory
 import os
+import json
+from tempfile import TemporaryDirectory
+import requests
+import boto3
 
 import config
 import mix_worker
 
-#----------------
+#---------------------------------------------------------
 
 def process_s3_file(response):
     '''Process a zip file dropped in the linked S3 bucket
@@ -29,25 +34,27 @@ def process_s3_file(response):
         message_body = json.loads(response['Messages'][0]['Body'])
         s3_key = message_body['Records'][0]['s3']['object']['key']
         receipt_handle = response['Messages'][0]['ReceiptHandle']
-        s3 = boto3.client('s3',conf['region']) 
+        s3 = boto3.client('s3', conf['region']) 
         bucket_name = conf['bucket_name'] 
         #---
         # Download the object, pass to the mix worker, and
         # send the result back to the S3 bucket
         with TemporaryDirectory() as tmp_dir:
             in_filename = s3_key
-            full_in_fname = os.path.join(tmp_dir,in_filename)
+            full_in_fname = os.path.join(tmp_dir, in_filename)
             s3.download_file(bucket_name, s3_key, full_in_fname)
             out_filename = mix_worker.generate_mix(in_filename, tmp_dir)
-            full_out_fname = os.path.join(tmp_dir,out_filename)
+            full_out_fname = os.path.join(tmp_dir, out_filename)
             s3.upload_file(full_out_fname, bucket_name, out_filename)
+            s3.upload_file('mix.log', bucket_name, 'mix.log')
         return receipt_handle
     # If anything fails, return a null value
-    # NEED TO LOG FAILURES....
     except:
+        # Upload the log file
+        s3.upload_file('mix.log', bucket_name, 'mix.log')
         return None
 
-#----------------
+#---------------------------------------------------------
 
 if __name__ == '__main__':
 
@@ -70,7 +77,7 @@ if __name__ == '__main__':
             receipt_handle = process_s3_file(response)
             # Remove the message from the queue if it was successfully processed
             if receipt_handle != None:
-                sqs.delete_message(QueueUrl=queue_url,ReceiptHandle=receipt_handle)
+                sqs.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
             #---
         # if there are no more messages to process, shut down the worker
         else:
@@ -78,7 +85,7 @@ if __name__ == '__main__':
             response = requests.get('http://169.254.169.254/latest/meta-data/instance-id')
             instance_id = response.text
             #--
-            ec2 = boto3.client('ec2',conf['region'])
+            ec2 = boto3.client('ec2', conf['region'])
             #ec2_response = ec2.terminate_instances(InstanceIds=[instance_id], DryRun=False)
 
         time.sleep(1)
