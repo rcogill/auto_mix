@@ -18,7 +18,6 @@ import zipfile
 import os
 
 import yaml
-import click
 
 #---------------------------------------------------------
 
@@ -293,12 +292,6 @@ def get_mix_section(c1, c2, r, directory):
         
 #---------------------------------------------------------
 
-@click.command()
-@click.option('--playlist_file', default=None,\
- help='A YAML file containing information on the playlist to generate.')
-@click.option('--directory', default=None,\
- help='The directory where the playlist and audio files are stored.')
-#------
 def create_mix_files(playlist_file, directory):
     '''Create a collection of audio files that compose a single,
        continuous mix.
@@ -401,6 +394,3 @@ def create_mix_files(playlist_file, directory):
     return True
 
 #---------------------------------------------------------
-
-if __name__ == '__main__':
-    create_mix_files()
