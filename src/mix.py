@@ -17,7 +17,7 @@ import mix_worker
 @click.option('--directory', default=None,\
  help='The directory where the playlist and audio files are stored.')
 #------
-main(playlist_file, directory):
+def main(playlist_file, directory):
     return mix_worker.create_mix_files(playlist_file, directory)
 
 #---------------------------------------------------------
