@@ -1,19 +1,10 @@
-- track: 'EDO G. - Saying  Something (prod dj premier).mp3'
+- track: 'Submotion Orhcestra - Its Not Me Its You (Alix Perez Remix).mp3'
   mix_out: 
-    start: '0:01:56.149'
-    end: '0:02:06.372'
-    beats: 16
-- track: 'J-Live - The Best Part [Prod. By DJ Premier].mp3'
+    start: '0:03:19.901'
+    end: '0:03:42.111'
+    beats: 64
+- track: 'Alix Perez - Myriads (Jubei Remix).mp3'
   mix_in:
-    start: '0:00:00.202'
-    end: '0:00:10.350'
-    beats: 16
-  mix_out: 
-    start: '0:02:11.852'
-    end: '0:02:21.985'
-    beats: 16
-- track: 'Pharoahe Monch YAYO.mp3'
-  mix_in:
-    start: '0:00:53.071'
-    end: '0:01:02.715'
-    beats: 16
+    start: '0:00:22.332'
+    end: '0:00:44.539'
+    beats: 64
