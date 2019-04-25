@@ -6,7 +6,7 @@ These scripts can be used in several ways. If all required dependecies are insta
 
 `python mix.py --playlist_file FILE.YAML --directory DIR`
 
-Here FILE.YAML is the YAML-formatted mix description file and DIR is the directory containing the playlist file and all input mp3 files to be mixed.
+Here FILE.YAML is the YAML-formatted mix description file and DIR is the directory containing the mix description file and all input mp3 files to be mixed.
 
 This repository contains a Dockerfile which can be used to build a container image that contains all required dependencies to run `mix.py`. Specifically, this container can be built by running  `docker build -t auto_mix .` to build the container image, then `docker run -it auto_mix bash` to run an interactive terminal session in this container. If all input files required to build a mix are trasferred to the container, then `mix.py` could be run within the container.
 
@@ -31,5 +31,5 @@ Some of the components required to provide mix generation as a service are provi
 This is still a work in progress, but some components required to implement this are provided in the repository and described below. One thing that is still missing is a script that can programmatically provision and configure the infrastructure on AWS needed to run this. 
 
 The specific components that implement this are the following:
-* `queue_process.py` : This script runs on an ec2 instance (optionally with a Docker container). This script continually polls the queue specified within `conf.yaml` for new jobs to process. When a new job arrives, this script calls `mix_worker.py` to generate the mix.
+* `queue_process.py` : This script runs on an ec2 instance (optionally within a Docker container). This script continually polls the queue specified within `conf.yaml` for new jobs to process. When a new job arrives, this script calls `mix_worker.py` to generate the mix.
 * `mix_lambda.py` : This simple Lambda function is responsible for inserting new messages into the SQS queue when new files are placed in the S3 bucket. The queue URL is retrieved from an environment variable which must be set when configuring the Lambda function.
