@@ -8,3 +8,12 @@
     start: '0:00:22.332'
     end: '0:00:44.539'
     beats: 64
+  mix_out: 
+    start: '0:02:57.714'
+    end: '0:03:19.911'
+    beats: 64
+- track: 'Calibre - Silence.mp3'
+  mix_in:
+    start: '0:03:22.481'
+    end: '0:03:44.413'
+    beats: 64
